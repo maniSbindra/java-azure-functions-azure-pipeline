@@ -1,0 +1,1 @@
+# Repository to demonstrate continuous deployment of Azure Functions written in Java to Azure Function App using Azure Pipelines
