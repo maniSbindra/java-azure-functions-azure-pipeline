@@ -39,3 +39,4 @@ steps:
     filePatterns: '**'
     remotePath: '/site/wwwroot'
     overwrite: true
+    preservePaths: true
