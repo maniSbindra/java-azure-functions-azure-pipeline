@@ -1,0 +1,42 @@
+resources:
+- repo: self
+queue:
+  name: default
+  demands: maven
+
+
+# Maven Package - create the function artifacts in
+steps:
+- task: Maven@2
+  displayName: 'Maven pom.xml'
+  inputs:
+    mavenPomFile: '$(mavenPOMFile)'
+
+# Copy and Publish the azure-functions directory which 
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: |
+     **/azure-functions/**
+    TargetFolder: '$(build.artifactstagingdirectory)'
+
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+
+# Ftp artifacts to Azure functions
+- task: FtpUpload@1
+  displayName: 'FTP Upload: To Function App ftp location'
+  inputs:
+    credentialsOption: inputs
+    serverUrl: '$(ftpsServerUrl)'
+    username: '$(ftpsUsername)'
+    password: '$(ftpsPassword)'
+    rootDirectory: '$(build.artifactstagingdirectory)/target/azure-functions/$(functionAppMvnTargetFolder)'
+    filePatterns: '**'
+    remotePath: '/site/wwwroot'
+    overwrite: true
+    preservePaths: true

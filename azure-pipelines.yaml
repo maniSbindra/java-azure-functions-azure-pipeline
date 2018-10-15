@@ -1,7 +1,7 @@
 resources:
 - repo: self
 queue:
-  name: default
+  name: Hosted VS2017
   demands: maven
 
 
@@ -12,31 +12,48 @@ steps:
   inputs:
     mavenPomFile: '$(mavenPOMFile)'
 
-# Copy and Publish the azure-functions directory which 
+# Copy files    
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
-    Contents: |
-     **/azure-functions/**
+    Contents: '**/azure-functions/**'
     TargetFolder: '$(build.artifactstagingdirectory)'
+
+
+# Create Archive : zip file
+- task: ArchiveFiles@2
+  displayName: 'Archive $(build.artifactstagingdirectory)/target/azure-functions/$(functionAppMvnTargetFolder)'
+  inputs:
+    rootFolderOrFile: '$(build.artifactstagingdirectory)/target/azure-functions/$(functionAppMvnTargetFolder)'
+    includeRootFolder: 
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+
+# Deploy using Azure App Service Deploy - Webdeployment
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Azure App Service Deploy: javapipeline'
+  inputs:
+    azureSubscription: 'Microsoft Azure Internal Consumption (***REMOVED***)'
+    appType: functionApp
+    WebAppName: javapipeline
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    enableCustomDeployment: true
+    TakeAppOfflineFlag: false
+    ExcludeFilesFromAppDataFlag: false
+    RenameFilesFlag: false
 
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
   inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
 
-# Ftp artifacts to Azure functions
-- task: FtpUpload@1
-  displayName: 'FTP Upload: To Function App ftp location'
-  inputs:
-    credentialsOption: inputs
-    serverUrl: '$(ftpsServerUrl)'
-    username: '$(ftpsUsername)'
-    password: '$(ftpsPassword)'
-    rootDirectory: '$(build.artifactstagingdirectory)/target/azure-functions/$(functionAppMvnTargetFolder)'
-    filePatterns: '**'
-    remotePath: '/site/wwwroot'
-    overwrite: true
-    preservePaths: true
+
+
+
+
+
+
