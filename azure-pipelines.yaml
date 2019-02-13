@@ -38,9 +38,10 @@ steps:
   inputs:
     azureSubscription: '$(azureSubcriptionKey)'
     appType: functionApp
-    WebAppName: javapipeline
+    WebAppName: javapipeline2
     packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     enableCustomDeployment: true
+    DeploymentType: runFromZip
     TakeAppOfflineFlag: false
     ExcludeFilesFromAppDataFlag: false
     RenameFilesFlag: false
